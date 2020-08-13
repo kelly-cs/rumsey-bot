@@ -13,6 +13,8 @@ class Bank:
         self.dir = os.path.dirname(__file__) # absolute dir the script is running in 
         self.initial_bank_load()
         self.money_sign = "$"
+        self.max_money = 9999999999999
+        self.message_size_limit = 1750
 
     def initial_bank_load(self):
         if os.path.getsize(os.path.join(self.dir, self.file_to_open)) > 0: # if there's data in there
@@ -36,26 +38,27 @@ class Bank:
         if not isinstance(amt, int):
             raise Exception("Incorrect type for amt") 
 
-        if userid in self.bank:
+        if userid in self.bank and ((self.bank[userid] + amt) <= self.max_money):
             self.bank[userid] += amt
-        else:
+        elif ((self.bank[userid] - amt) >= -self.max_money):
             self.bank[userid] = amt
         self.write_to_file()
     
     def decrement(self, userid, amt):
         if not isinstance(amt, int):
             raise Exception("Incorrect type for amt") 
-        if userid in self.bank:
+        if userid in self.bank and ((self.bank[userid] - amt) >= -self.max_money):
             self.bank[userid] -= amt
-        else:
+        elif ((self.bank[userid] - amt) >= -self.max_money):
             self.bank[userid] = -amt
         self.write_to_file()
 
     def set_to(self, userid, amt):
         if not isinstance(amt, int):
-            raise Exception("Incorrect type for amt") 
-        self.bank[userid] = amt
-        self.write_to_file()
+            raise Exception("Incorrect type for amt")
+        if amt >= -self.max_money and amt <= self.max_money:
+            self.bank[userid] = amt
+            self.write_to_file()
 
     def get_balance(self, userid):
         if userid in self.bank:
@@ -71,16 +74,20 @@ class Bank:
         
         output = ""
         # https://careerkarma.com/blog/python-sort-a-dictionary-by-value/#:~:text=To%20sort%20a%20dictionary%20by%20value%20in%20Python%20you%20can,Dictionaries%20are%20unordered%20data%20structures.
-        balances = sorted(self.bank.items(), key=lambda x: x[1], reverse=True)
+        balances = [list(i) for i in sorted(self.bank.items(), key=lambda x: x[1], reverse=True)]
 
         for sorted_users in balances:
             username = client.get_user(int(sorted_users[0])).name
-            if balances.index(sorted_users) == 0:
+            if sorted_users[1] > self.max_money:
+                sorted_users[1] = "∞"
+            elif sorted_users[1] < -self.max_money:
+                sorted_users[1] = "-∞"
+            if balances.index(sorted_users) == 0 and len(output) < self.message_size_limit:
                 output += ("```diff\n- " + username + "\t" + self.money_sign + str(sorted_users[1]) + "\n```") # makes it red (the -)
-            elif balances.index(sorted_users) == 1:
+            elif balances.index(sorted_users) == 1 and len(output) < self.message_size_limit:
                 output += ("```fix\n " + username + "\t" + self.money_sign + str(sorted_users[1]) + "\n```") # makes it yellow
-            elif balances.index(sorted_users) == 2:
+            elif balances.index(sorted_users) == 2 and len(output) < self.message_size_limit:
                 output += ("```fix\n " + username + "\t" + self.money_sign + str(sorted_users[1]) + "\n```") # makes it yellow
-            else:
+            elif len(output) < self.message_size_limit:
                 output += ("```diff\n+ " + username + "\t" + self.money_sign + str(sorted_users[1]) + "\n```") # makes it green
         return output
