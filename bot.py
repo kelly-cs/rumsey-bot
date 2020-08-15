@@ -1,6 +1,5 @@
 import discord
 import random
-import argparse
 from bank import Bank
 
 client = discord.Client()
@@ -31,7 +30,7 @@ def get_user_id_from_message(msg):
     for char in msg:
         if char.isnumeric():
             output = output + char
-    print(output)
+    #print(output)
     return int(output)
 
 
@@ -42,17 +41,17 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    print(commands)
+    #print(commands)
     if message.author == client.user:
         return
 
     args = message.content.split()
     if args[0].startswith(delimiter):
-        print(args[0][1:])
+        #print(args[0][1:])
         if args[0][1:] in commands: # remove delimiter and check
             owner_module = commands[args[0][1:]] # index of the owning module
-            print("ARGS GIVEN: ", len(args), "COMMAND ARGS: ", owner_module["nargs"])
-            print("MODULE: ", owner_module["module"])
+            # print("ARGS GIVEN: ", len(args), "COMMAND ARGS: ", owner_module["nargs"])
+            # print("MODULE: ", owner_module["module"])
             if len(args) >= owner_module["nargs"]: # if right number of args
                 #try:
                 print("about to try: ", args[0])

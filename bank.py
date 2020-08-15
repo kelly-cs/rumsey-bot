@@ -58,7 +58,7 @@ class Bank:
         }
         if args[0][1:] in self.commands:
             if self.commands[args[0][1:]][2] == Flag.EVERYONE:
-                print("FUNCTION: ", self.commands[args[0][1:]][0])
+                #print("FUNCTION: ", self.commands[args[0][1:]][0])
                 await options[self.commands[args[0][1:]][0]](args, client, client_message) # run the function associated with that command. Grabs enum from self.commands to get function call here.
             elif self.commands[args[0][1:]][2] == Flag.ADMIN_ONLY and client_message.author.guild_permissions.administrator:
                 await options[self.commands[args[0][1:]][0]](args, client, client_message) # run the function associated with that command. Grabs enum from self.commands to get function call here.
@@ -73,7 +73,8 @@ class Bank:
             self.bank = json.loads(bank_file.read()) # Json to Dictionary
             bank_file.flush()
             bank_file.close()
-            print(self.bank)
+            print("Bank loaded!")
+            #print(self.bank)
         else:
             self.bank = {}
         
