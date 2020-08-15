@@ -1,11 +1,20 @@
 import discord
 import random
+import argparse
 from bank import Bank
 
 client = discord.Client()
-bank = Bank()
 delimiter = "$"
 
+ # to install a new module, put a comma at the end of the bottom module and insert the call to the new module like Module()
+modules = [
+    Bank()
+]
+commands = {}
+for mods in modules:
+    for args in mods.commands.keys(): # for all commands in the module
+        commands[args] = {"nargs": mods.commands[args][1], "module": modules.index(mods)} # command, amt args, module it belongs to
+        
 def get_error_response():
     responses = [
         "come again?",
@@ -33,82 +42,25 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    args = message.content.split()
+    print(commands)
     if message.author == client.user:
         return
 
-    '''
-    Bank Section
-
-    Commands:
-    bill / add @userid amount
-    deduct / remove @userid amount
-    setbalance @userid amount
-    mybalance
-    balance @userid
-    balances
-
-    '''
-    if (args[0].startswith(delimiter+"bill") or args[0].startswith(delimiter+"add")) and len(args) >= 3:
-        user = get_user_id_from_message(args[1])
-        amt = int(args[2])
-        try:
-            if(client.get_user(user) != None): # confirm the user is actually existing
-                bank.increment(str(user), amt)
-                await message.add_reaction("\U0001F4B8")
-        except Exception as e:
-            print("error: ", str(e))
-            await message.channel.send(get_error_response())
-            return
-        return
-    elif (args[0].startswith(delimiter+"deduct") or args[0].startswith(delimiter+"remove")) and len(args) >= 3:
-        user = get_user_id_from_message(args[1])
-        amt = int(args[2])
-        try:
-            if(client.get_user(user) != None): # confirm the user is actually existing
-                bank.decrement(str(user), amt)
-                await message.add_reaction("\U0001F4B8")
-        except Exception as e:
-            print("error: ", str(e))
-            await message.channel.send(get_error_response())
-            return
-        return
-    elif args[0].startswith(delimiter+"setbalance") and len(args) >= 3:
-        user = get_user_id_from_message(args[1])
-        amt = int(args[2])
-        try:
-            if(client.get_user(user) != None): # confirm the user is actually existing
-                bank.set_to(str(user), amt)
-                await message.add_reaction("\U0001F4B8")
-        except Exception as e:
-            print("error: ", str(e))
-            await message.channel.send(get_error_response())
-            return
-        return       
-    elif args[0].startswith(delimiter+"mybalance"):
-        user = message.author.id
-        try:
-            await message.channel.send(client.get_user(user).display_name+ "\'s balance is " + str(bank.get_balance(str(user))))
-        except Exception as e:
-            print("error: ", str(e))
-            await message.channel.send(get_error_response())
-            return
-        return
-    elif args[0].startswith(delimiter+"balance") and len(args) == 2:
-        user = get_user_id_from_message(args[1])
-        try:
-            await message.channel.send(client.get_user(user).display_name + "\'s balance is " + str(bank.get_balance(str(user))))
-        except Exception as e:
-            print("error: ", str(e))
-            await message.channel.send(get_error_response())
-            return
-        return
-    elif args[0].startswith(delimiter+"balances"):
-        try:
-            await message.channel.send(bank.all_balances(client))
-        except Exception as e:
-            print("error: ", str(e))
-            await message.channel.send(get_error_response())
-            return
-        return
+    args = message.content.split()
+    if args[0].startswith(delimiter):
+        print(args[0][1:])
+        if args[0][1:] in commands: # remove delimiter and check
+            owner_module = commands[args[0][1:]] # index of the owning module
+            print("ARGS GIVEN: ", len(args), "COMMAND ARGS: ", owner_module["nargs"])
+            print("MODULE: ", owner_module["module"])
+            if len(args) >= owner_module["nargs"]: # if right number of args
+                #try:
+                print("about to try: ", args[0])
+                await modules[owner_module["module"]].handle_command(args, client, message) # send the whole thing to that module to figure out
+                #except Exception as e:
+                    #print("error: ", str(e))
+                    #await message.channel.send(get_error_response())
+    return
 client.run('')
+
+   
