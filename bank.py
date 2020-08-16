@@ -32,17 +32,17 @@ class Bank:
         self.max_money = 9999999999
         self.message_size_limit = 1750
         self.round_money_to_decimal = 2
-        self.commands = {
-            "bill": [Command.INCREMENT, 2, Flag.ADMIN_ONLY],
-            "add": [Command.INCREMENT, 2, Flag.ADMIN_ONLY],
-            "remove": [Command.DECREMENT, 2, Flag.ADMIN_ONLY],
-            "deduct": [Command.DECREMENT, 2, Flag.ADMIN_ONLY],
-            "setbalance": [Command.SET_TO, 2, Flag.ADMIN_ONLY],
-            "set": [Command.SET_TO, 2, Flag.ADMIN_ONLY],
-            "mybalance": [Command.GET_BALANCE_SELF, 0, Flag.EVERYONE],
-            "balance": [Command.GET_BALANCE_OTHER, 1, Flag.EVERYONE],
-            "balances": [Command.ALL_BALANCES, 0, Flag.EVERYONE],
-            "removeid": [Command.REMOVE_RECORD, 1, Flag.ADMIN_ONLY]
+        self.commands = { # format: "command": [Enum flag, amt of args, permissions required, "help" to display]
+            "bill": [Command.INCREMENT, 2, Flag.ADMIN_ONLY, "@user amount"],
+            "add": [Command.INCREMENT, 2, Flag.ADMIN_ONLY,"@user amount"],
+            "remove": [Command.DECREMENT, 2, Flag.ADMIN_ONLY,"@user amount"],
+            "deduct": [Command.DECREMENT, 2, Flag.ADMIN_ONLY,"@user amount"],
+            "setbalance": [Command.SET_TO, 2, Flag.ADMIN_ONLY,"@user amount"],
+            "set": [Command.SET_TO, 2, Flag.ADMIN_ONLY,"@user amount"],
+            "mybalance": [Command.GET_BALANCE_SELF, 0, Flag.EVERYONE,""],
+            "balance": [Command.GET_BALANCE_OTHER, 1, Flag.EVERYONE,"@user"],
+            "balances": [Command.ALL_BALANCES, 0, Flag.EVERYONE, ""],
+            "removeid": [Command.REMOVE_RECORD, 1, Flag.ADMIN_ONLY, "@user"]
         }
     # https://stackoverflow.com/questions/11479816/what-is-the-python-equivalent-for-a-case-switch-statement
     # command is passed in as a pre-parsed list of args, arg[0] being the command
