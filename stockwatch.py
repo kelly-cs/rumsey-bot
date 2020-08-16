@@ -38,7 +38,7 @@ class Flag(Enum):
 #@asyncinit
 class StockWatch:
     def __init__(self, client, bank = "stock_alert.txt"):
-        self.token = "17e85036d317e0f26afe84b4d564312e019b0e82" # ENTER YOUR TIINGO TOKEN HERE AS A STRING https://api.tiingo.com/
+        self.token = "" # ENTER YOUR TIINGO TOKEN HERE AS A STRING https://api.tiingo.com/
         self.client = client
         self.bank = {}
         self.money_sign = "$"
