@@ -146,6 +146,7 @@ class StockWatch:
         for subs in self.bank[stock]["subscribers"]:
            mention_list += "<@" + subs + "> "
         await channel.send(mention_list)
+
     async def get_stock_info(self, args):
         stock = args[1]
         ''' https://finnhub.io/docs/api#quote
@@ -161,7 +162,9 @@ class StockWatch:
         return r
         
     async def get_stock_info_and_print(self, args, client, client_message):
-        await self.print_stock_info(self.get_stock_info(args, client, client_message))
+        stock = args[1] # returns stock name as string
+        channel = self.bank[stock]["channel"] # returns int representing channel
+        await self.print_stock_info(await self.get_stock_info(args), channel, args[1])
 
     async def set_stock_alert_daily(self, args, client, client_message):
         stock = args[1]
