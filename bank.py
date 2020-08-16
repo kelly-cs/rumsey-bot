@@ -27,7 +27,7 @@ class Bank:
         self.bank = {}
         self.file_to_open = bank_file
         self.dir = os.path.dirname(__file__) # absolute dir the script is running in 
-        self.initial_bank_load()
+        #self.initial_bank_load()
         self.money_sign = "$"
         self.max_money = 9999999999
         self.message_size_limit = 1750
@@ -67,8 +67,8 @@ class Bank:
         else:
             raise Exception("Invalid command for Bank")
 
-    def initial_bank_load(self):
-        if os.path.getsize(os.path.join(self.dir, self.file_to_open)) > 0: # if there's data in there
+    async def initial_bank_load(self):
+        if os.path.exists(os.path.join(self.dir, self.file_to_open)) and os.path.getsize(os.path.join(self.dir, self.file_to_open)) > 0: # if there's data in there
             bank_file = open(os.path.join(self.dir, self.file_to_open), "r")
             self.bank = json.loads(bank_file.read()) # Json to Dictionary
             bank_file.flush()
@@ -76,6 +76,10 @@ class Bank:
             print("Bank loaded!")
             #print(self.bank)
         else:
+            bank_file = open(os.path.join(self.dir, self.file_to_open), "w")
+            bank_file.flush()
+            bank_file.close()
+            print("Bank() new bank created")
             self.bank = {}
         
 

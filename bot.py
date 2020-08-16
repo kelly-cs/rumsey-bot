@@ -1,7 +1,9 @@
 import discord
 import sys
+import asyncio
 import random
 from bank import Bank
+from stockwatch import StockWatch
 
 # To RUN in CMD/Powershell/BASH:
 # >> python bot.py your-token-here
@@ -9,12 +11,16 @@ from bank import Bank
 client = discord.Client()
 delimiter = "$"
 
- # to install a new module, put a comma at the end of the bottom module and insert the call to the new module like Module()
+
+
+# to install a new module, put a comma at the end of the bottom module and insert the call to the new module like Module()
 modules = [
-    Bank()
+    Bank(),
+    StockWatch(client)
 ]
 
 commands = {}
+
 for mods in modules:
     for args in mods.commands.keys(): # for all commands in the module
         commands[args] = {"nargs": mods.commands[args][1], "module": modules.index(mods), "help": modules[modules.index(mods)].commands[args][3]} # command, amt args, module it belongs to
@@ -53,6 +59,8 @@ def get_help_single(cmd):
 @client.event
 async def on_ready():
     print("Logged in as  {0.user}".format(client))
+    for mods in modules:
+        await mods.initial_bank_load()
 
 @client.event
 async def on_message(message):
@@ -78,13 +86,12 @@ async def on_message(message):
             # print("ARGS GIVEN: ", len(args), "COMMAND ARGS: ", owner_module["nargs"])
             # print("MODULE: ", owner_module["module"])
             if len(args) >= owner_module["nargs"]: # if right number of args
-                try:
-                    print("about to try: ", args[0])
-                    await modules[owner_module["module"]].handle_command(args, client, message) # send the whole thing to that module to figure out
-                except Exception as e:
-                    print("error: ", str(e))
-                    await message.channel.send(get_error_response())
+                #try:
+                print("about to try: ", args[0])
+                await modules[owner_module["module"]].handle_command(args, client, message) # send the whole thing to that module to figure out
+                #except Exception as e:
+                    #print("error: ", str(e))
+                    #await message.channel.send(get_error_response())
     return
+    
 client.run(sys.argv[1])
-
-   

@@ -1,0 +1,1 @@
+{"CCTL": {"daily": 1, "percent_change": 0.15, "lastalert": "2020-08-14", "channel": 682798897269047305, "subscribers": ["284126954918248449"]}}
