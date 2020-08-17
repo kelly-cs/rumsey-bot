@@ -202,7 +202,7 @@ class StockWatch:
         
     async def get_stock_info_and_print(self, args, client, client_message):
         stock = args[1] # returns stock name as string
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         if guild in self.bank and stock in self.bank[guild]:
             channel = self.bank[guild][stock]["channel"] # returns int representing channel where an alert was made
         else:
@@ -214,7 +214,7 @@ class StockWatch:
         #try:
         stock = args[1]
         percent = float(args[2])
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         if guild in self.bank and stock in self.bank[guild] and (self.bank[guild][stock]["daily"] == 1): # if a daily alert already exists
             await client_message.channel.send("A daily alert already exists for " + stock + " -  remove it first!")
             raise Exception("A daily alert for " + stock + " already exists!")
@@ -298,7 +298,7 @@ class StockWatch:
 
         mention_list = ""
         if alert_subscribers == True:
-            for subs in self.bank[guild][crypto]["subscribers"]:
+            for subs in self.bank[str(guild)][crypto]["subscribers"]:
                 mention_list += "<@" + subs + "> "
             await channel.send(mention_list)
 
@@ -315,7 +315,7 @@ class StockWatch:
         #try:
         crypto = args[1]
         percent = float(args[2])
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         
         if guild in self.bank and crypto in self.bank[guild] and (self.bank[guild][crypto]["daily"] == 1): # if a daily alert already exists
             await client_message.channel.send("A daily alert already exists for " + crypto + " -  remove it first!")
@@ -339,7 +339,7 @@ class StockWatch:
 
     async def remove_stock_alert_daily(self, args, client, client_message):
         stock = args[1]
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         if stock in self.bank[guild] and self.bank[guild][stock]["type"] == "stock" and (self.bank[guild][stock]["daily"] == 1): # if a daily alert already exists
             
             self.bank[guild][stock]["daily"] = 0
@@ -354,7 +354,7 @@ class StockWatch:
             
     async def remove_crypto_alert_daily(self, args, client, client_message):
         crypto = args[1]
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         if crypto in self.bank[guild] and self.bank[guild][crypto]["type"] == "crypto" and self.bank[guild][crypto]["daily"] == 1: # if a daily alert already exists
             self.bank[guild][crypto]["daily"] = 0
             self.bank[guild][crypto]["daily_lastalert"] = 0
@@ -368,7 +368,7 @@ class StockWatch:
 
     async def remove_stock_alert_long_term(self, args, client, client_message):
         stock = args[1]
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         if stock in self.bank[guild] and self.bank[guild][stock]["type"] == "stock" and (self.bank[guild][stock]["long_term"] == 1): # if a daily alert already exists
             self.bank[guild][stock]["long_term"] = 0
             self.bank[guild][stock]["long_term_lastalert"] = 0
@@ -382,7 +382,7 @@ class StockWatch:
 
     async def remove_crypto_alert_long_term(self, args, client, client_message):
         crypto = args[1]
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         if guild in self.bank and crypto in self.bank[guild] and self.bank[guild][crypto]["type"] == "crypto" and (self.bank[guild][crypto]["long_term"] == 1): # if a daily alert already exists
             self.bank[guild][crypto]["long_term"] = 0
             self.bank[guild][crypto]["long_term_lastalert"] = 0
@@ -396,7 +396,7 @@ class StockWatch:
 
     async def show_alerts(self, args, client, client_message):
         output = ""
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         if guild in self.bank:
             for alerts in self.bank[guild]:
                 if self.bank[guild][alerts]["long_term"] == 1:
@@ -411,7 +411,7 @@ class StockWatch:
 
     async def subscribe_to_alert(self, args, client, client_message):
         stock = args[1]
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         if guild in self.bank and stock in self.bank[guild]:
             self.bank[guild][stock]["subscribers"].append(int(client_message.author.id))
             await client_message.add_reaction("\U00002611")
@@ -419,7 +419,7 @@ class StockWatch:
             await client_message.channel.send("No alerts for " + stock + " yet. Make one first!")
 
     async def list_subscribers(self, args, client, client_message):
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         if len(args) < 2:
             await client_message.channel.send("Specify a stock to check!" )
         else:
