@@ -94,17 +94,24 @@ class Bank:
     async def increment(self, args, client, client_message):
         userid = str(self.get_user_id_from_message(args[1]))
         amt = abs(float(args[2].replace('\U00002013', '-')))
+        guild = client_message.guild.id
         if not isinstance(amt, float):
             raise Exception("Incorrect type for amt") 
 
         if(client.get_user(int(userid)) != None): # confirm the user is actually existing
-            if userid in self.bank and ((self.bank[userid] + amt) <= self.max_money):
+            if guild in self.bank and userid in self.bank[guild] and ((self.bank[guild][userid] + amt) <= self.max_money):
                 await client_message.add_reaction("\U0001F4B8")
-                self.bank[userid] += amt
+                self.bank[guild][userid] += amt
                 self.write_to_file()
+            elif guild in self.bank: # guild exists but user does not
+                await client_message.add_reaction("\U0001F4B8")
+                self.bank[guild][userid] = amt
+                self.write_to_file()
+                print("created new user in Bank: ", userid, " - ", amt)               
             else:
                 await client_message.add_reaction("\U0001F4B8")
-                self.bank[userid] = amt
+                self.bank[guild] = {}
+                self.bank[guild][userid] = amt
                 self.write_to_file()
                 print("created new user in Bank: ", userid, " - ", amt)
         else:
@@ -114,19 +121,26 @@ class Bank:
     async def decrement(self, args, client, client_message):
         userid = str(self.get_user_id_from_message(args[1]))
         amt = abs(float(args[2].replace('\U00002013', '-')))
+        guild = client_message.guild.id
         print("decrement user: ", userid)
         print("decrement amt: ", amt)
         if not isinstance(amt, float):
             raise Exception("Incorrect type for amt")
 
         if(client.get_user(int(userid)) != None): # confirm the user is actually existing 
-            if userid in self.bank and ((self.bank[userid] - amt) >= -self.max_money):
+            if guild in self.bank and userid in self.bank[guild] and ((self.bank[guild][userid] - amt) >= -self.max_money):
                 await client_message.add_reaction("\U0001F4B8")
-                self.bank[userid] -= amt
+                self.bank[guild][userid] -= amt
                 self.write_to_file()
-            else:
+            elif guild in self.bank: # guild exists but user does not
                 await client_message.add_reaction("\U0001F4B8")
-                self.bank[userid] = -amt
+                self.bank[guild][userid] = -amt
+                self.write_to_file()
+                print("created new user in Bank: ", userid, " - ", amt)
+            else: # neither exist
+                await client_message.add_reaction("\U0001F4B8")
+                self.bank[guild] = {}
+                self.bank[guild][userid] = -amt
                 self.write_to_file()
                 print("created new user in Bank: ", userid, " - ", amt)
         else:
@@ -136,44 +150,53 @@ class Bank:
     async def set_to(self, args, client, client_message):
         userid = str(self.get_user_id_from_message(args[1]))
         amt = float(args[2].replace('\U00002013', '-'))
-        if userid in self.bank and ((self.bank[userid] + amt) <= self.max_money) and ((self.bank[userid] + amt) >= -self.max_money):
-            self.bank[userid] = amt
+        guild = client_message.guild.id
+
+        if guild in self.bank and userid in self.bank[guild] and ((self.bank[guild][userid] + amt) <= self.max_money) and ((self.bank[guild][userid] + amt) >= -self.max_money):
+            self.bank[guild][userid] = amt
+        elif guild in self.bank:
+            self.bank[guild][userid] = amt
+        else:
+            self.bank[guild] = {}
+            self.bank[guild][userid] = amt
         if not isinstance(amt, float):
             raise Exception("Incorrect type for amt")
 
         if(client.get_user(int(userid)) != None): # confirm the user is actually existing 
             if amt >= -self.max_money and amt <= self.max_money:
                 await client_message.add_reaction("\U0001F4B8")
-                self.bank[userid] = amt
+                self.bank[guild][userid] = amt
                 self.write_to_file()
             elif amt <= -self.max_money:
                 await client_message.add_reaction("\U0001F4B8")
-                self.bank[userid] = -self.max_money
+                self.bank[guild][userid] = -self.max_money
                 self.write_to_file()
             elif amt >= self.max_money:
                 await client_message.add_reaction("\U0001F4B8")
-                self.bank[userid] = self.max_money
+                self.bank[guild][userid] = self.max_money
                 self.write_to_file()
         else:
             raise Exception("user doesn't exist")
 
     #async def get_balance(self, userid, client, client_message):
     async def get_balance(self, args, client, client_message):
+        guild = client_message.guild.id
         if len(args) > 1:
             userid = str(self.get_user_id_from_message(args[1]))
         else:
             userid = str(self.get_user_id_from_message(client_message.author.id))
         print("userid for get_balance: ", userid)
-        if userid in self.bank:
-            await client_message.channel.send(client.get_user(int(userid)).display_name + "\'s balance is " + self.money_sign + str(format(self.bank[str(userid)], '.'+str(self.round_money_to_decimal)+'f')))
+        if guild in self.bank and userid in self.bank[guild]:
+            await client_message.channel.send(client.get_user(int(userid)).display_name + "\'s balance is " + self.money_sign + str(format(self.bank[guild][str(userid)], '.'+str(self.round_money_to_decimal)+'f')))
         else:
             raise Exception("user doesn't exist")
     
     #async def remove_id(self, userid, client, client_message):
     async def remove_id(self, args, client, client_message):
+        guild = client_message.guild.id
         userid = str(self.get_user_id_from_message(args[1]))
-        if userid in self.bank:
-            self.bank.pop(userid)
+        if guild in self.bank and userid in self.bank[guild]:
+            self.bank[guild].pop(userid)
             self.write_to_file()
             await client_message.add_reaction("\U0001F4B8")
         else:
@@ -181,27 +204,30 @@ class Bank:
 
 
     async def all_balances(self, args, client, client_message):
-        
+        guild = client_message.guild.id
         output = ""
-        # https://careerkarma.com/blog/python-sort-a-dictionary-by-value/#:~:text=To%20sort%20a%20dictionary%20by%20value%20in%20Python%20you%20can,Dictionaries%20are%20unordered%20data%20structures.
-        balances = [list(i) for i in sorted(self.bank.items(), key=lambda x: x[1], reverse=True)]
+        if guild in self.bank:
+            # https://careerkarma.com/blog/python-sort-a-dictionary-by-value/#:~:text=To%20sort%20a%20dictionary%20by%20value%20in%20Python%20you%20can,Dictionaries%20are%20unordered%20data%20structures.
+            balances = [list(i) for i in sorted(self.bank[guild].items(), key=lambda x: x[1], reverse=True)]
 
-        for sorted_users in balances:
-            username = client.get_user(int(sorted_users[0])).name
-            sorted_users[1] = float(sorted_users[1])
-            if sorted_users[1] >= self.max_money:
-                sorted_users[1] = self.max_money
-            elif sorted_users[1] <= -self.max_money:
-                sorted_users[1] = -self.max_money
-            if balances.index(sorted_users) == 0 and len(output) < self.message_size_limit: 
-                output += ("```diff\n- " + username + "\t" + self.money_sign + str(format(sorted_users[1], '.'+str(self.round_money_to_decimal)+'f')) + "\n```") # makes it red (the -)
-            elif balances.index(sorted_users) == 1 and len(output) < self.message_size_limit:
-                output += ("```fix\n " + username + "\t" + self.money_sign + str(format(sorted_users[1], '.'+str(self.round_money_to_decimal)+'f')) + "\n```") # makes it yellow
-            elif balances.index(sorted_users) == 2 and len(output) < self.message_size_limit:
-                output += ("```fix\n " + username + "\t" + self.money_sign + str(format(sorted_users[1], '.'+str(self.round_money_to_decimal)+'f')) + "\n```") # makes it yellow
-            elif len(output) < self.message_size_limit:
-                output += ("```diff\n+ " + username + "\t" + self.money_sign + str(format(sorted_users[1], '.'+str(self.round_money_to_decimal)+'f')) + "\n```") # makes it green
-        await client_message.channel.send(output)
+            for sorted_users in balances:
+                username = client.get_user(int(sorted_users[0])).name
+                sorted_users[1] = float(sorted_users[1])
+                if sorted_users[1] >= self.max_money:
+                    sorted_users[1] = self.max_money
+                elif sorted_users[1] <= -self.max_money:
+                    sorted_users[1] = -self.max_money
+                if balances.index(sorted_users) == 0 and len(output) < self.message_size_limit: 
+                    output += ("```diff\n- " + username + "\t" + self.money_sign + str(format(sorted_users[1], '.'+str(self.round_money_to_decimal)+'f')) + "\n```") # makes it red (the -)
+                elif balances.index(sorted_users) == 1 and len(output) < self.message_size_limit:
+                    output += ("```fix\n " + username + "\t" + self.money_sign + str(format(sorted_users[1], '.'+str(self.round_money_to_decimal)+'f')) + "\n```") # makes it yellow
+                elif balances.index(sorted_users) == 2 and len(output) < self.message_size_limit:
+                    output += ("```fix\n " + username + "\t" + self.money_sign + str(format(sorted_users[1], '.'+str(self.round_money_to_decimal)+'f')) + "\n```") # makes it yellow
+                elif len(output) < self.message_size_limit:
+                    output += ("```diff\n+ " + username + "\t" + self.money_sign + str(format(sorted_users[1], '.'+str(self.round_money_to_decimal)+'f')) + "\n```") # makes it green
+            await client_message.channel.send(output)
+        else:
+            await client_message.channel.send("No balances yet. Go bill somebody!")
 
     def get_user_id_from_message(self, msg):
         output = ""
