@@ -145,11 +145,11 @@ class StockWatch:
             print("Stock Watcher Daily Routine Call Success: " + stock)
             current_price = float(r[0]["close"])
             previous_close = float(r[0]["open"])
-            percent_difference = ((current_price - previous_close) / previous_close) * 100 
+            percent_difference = ((current_price - previous_close) / previous_close)
             if self.bank[guild][stock]["daily_lastalert"] != r[0]["date"][0:(self.length_of_date_string_to_read-1)] and abs(percent_difference) > abs(self.bank[guild][stock]["daily_percent_change"]): # if the change is greater than the alert specification, and it isn't the same time
                 self.bank[guild][stock]["daily_lastalert"] = r[0]["date"][0:(self.length_of_date_string_to_read-1)]
                 self.write_to_file()
-                await self.print_stock_info(r, self.bank[guild][stock]["channel"], stock, True, "*24HR Change Alert! [Threshold: " + format(self.bank[guild][stock]["daily_percent_change"]*100, "." + str(self.round_money_to_decimal)+"f") + "%]*")
+                await self.print_stock_info(r, guild, self.bank[guild][stock]["channel"], stock, True, "*24HR Change Alert! [Threshold: " + format(self.bank[guild][stock]["daily_percent_change"]*100, "." + str(self.round_money_to_decimal)+"f") + "%]*")
                 await asyncio.gather(await self.stock_watcher_daily(stock, guild))
             else:
                 await asyncio.gather(await self.stock_watcher_daily(stock, guild))
@@ -203,12 +203,8 @@ class StockWatch:
     async def get_stock_info_and_print(self, args, client, client_message):
         stock = args[1] # returns stock name as string
         guild = str(client_message.guild.id)
-        if guild in self.bank and stock in self.bank[guild]:
-            channel = self.bank[guild][stock]["channel"] # returns int representing channel where an alert was made
-        else:
-            channel = client_message.channel.id # returns int representing channel of where command was just ran
-
-        await self.print_stock_info(await self.get_stock_info(args), channel, args[1], False)
+        channel = client_message.channel.id
+        await self.print_stock_info(await self.get_stock_info(args), guild, channel, args[1], False)
 
     async def set_stock_alert_daily(self, args, client, client_message):
         #try:
@@ -219,7 +215,7 @@ class StockWatch:
             await client_message.channel.send("A daily alert already exists for " + stock + " -  remove it first!")
             raise Exception("A daily alert for " + stock + " already exists!")
         elif guild in self.bank: # guild exists but alert does not
-            self.bank[guild][crypto] = {"daily": 1, "long_term":0, "daily_percent_change": percent, "long_term_percent_change": 0, "daily_lastalert": 0, "long_term_lastalert":0, "channel": client_message.channel.id, "subscribers": [str(client_message.author.id)], "type": "crypto"}
+            self.bank[guild][stock] = {"daily": 1, "long_term":0, "daily_percent_change": percent, "long_term_percent_change": 0, "daily_lastalert": 0, "long_term_lastalert":0, "channel": client_message.channel.id, "subscribers": [str(client_message.author.id)], "type": "stock"}
             self.write_to_file()
             await client_message.add_reaction("\U00002611")
             await self.stock_watcher_daily(args[1], guild)
@@ -245,11 +241,11 @@ class StockWatch:
             print("crypto Watcher daily Routine Call Success: " + crypto)
             current_price = float(r[0]["priceData"][-1]["close"]) # get the last (most recent price) for the day
             previous_close = float(r[0]["priceData"][0]["open"]) # get the first (midnight today price) for the day
-            percent_difference = ((current_price - previous_close) / previous_close) * 100 
+            percent_difference = ((current_price - previous_close) / previous_close)
             if self.bank[guild][crypto]["daily_lastalert"] != r[0]["priceData"][-1]["date"][0:(self.length_of_date_string_to_read-1)] and abs(percent_difference) > abs(self.bank[guild][crypto]["daily_percent_change"]): # if the change is greater than the alert specification, and it isn't the same time
                 self.bank[guild][crypto]["daily_lastalert"] = r[0]["priceData"][-1]["date"][0:(self.length_of_date_string_to_read-1)]
                 self.write_to_file()
-                await self.print_crypto_info(r, self.bank[guild][crypto]["channel"], crypto, True, "*24HR Change Alert! [Threshold: " + format(self.bank[guild][crypto]["daily_percent_change"]*100, "." + str(self.round_money_to_decimal)+"f") + "%]*")
+                await self.print_crypto_info(r, guild,  self.bank[guild][crypto]["channel"], crypto, True, "*24HR Change Alert! [Threshold: " + format(self.bank[guild][crypto]["daily_percent_change"]*100, "." + str(self.round_money_to_decimal)+"f") + "%]*")
                 await asyncio.gather(
                     self.crypto_watcher_daily(crypto, guild)
                 )
@@ -302,14 +298,11 @@ class StockWatch:
                 mention_list += "<@" + subs + "> "
             await channel.send(mention_list)
 
-    async def get_crypto_info_and_print(self, args, guild, client, client_message):
+    async def get_crypto_info_and_print(self, args, client, client_message):
         crypto = args[1] # returns stock name as string
-        if crypto in self.bank[guild]:
-            channel = self.bank[guild][crypto]["channel"] # returns int representing channel where an alert was made
-        else:
-            channel = client_message.channel.id # returns int representing channel of where command was just ran
-
-        await self.print_crypto_info(await self.get_crypto_info(args), channel, args[1], False)
+        channel = client_message.channel.id
+        guild = str(client_message.guild.id)
+        await self.print_crypto_info(await self.get_crypto_info(args), channel, guild, args[1], False)
        
     async def set_crypto_alert_daily(self, args, client, client_message):
         #try:
@@ -340,8 +333,7 @@ class StockWatch:
     async def remove_stock_alert_daily(self, args, client, client_message):
         stock = args[1]
         guild = str(client_message.guild.id)
-        if stock in self.bank[guild] and self.bank[guild][stock]["type"] == "stock" and (self.bank[guild][stock]["daily"] == 1): # if a daily alert already exists
-            
+        if guild in self.bank and stock in self.bank[guild] and self.bank[guild][stock]["type"] == "stock" and (self.bank[guild][stock]["daily"] == 1): # if a daily alert already exists
             self.bank[guild][stock]["daily"] = 0
             self.bank[guild][stock]["daily_lastalert"] = 0
             if self.bank[guild][stock]["long_term"] == 0:
@@ -355,7 +347,7 @@ class StockWatch:
     async def remove_crypto_alert_daily(self, args, client, client_message):
         crypto = args[1]
         guild = str(client_message.guild.id)
-        if crypto in self.bank[guild] and self.bank[guild][crypto]["type"] == "crypto" and self.bank[guild][crypto]["daily"] == 1: # if a daily alert already exists
+        if guild in self.bank and crypto in self.bank[guild] and self.bank[guild][crypto]["type"] == "crypto" and self.bank[guild][crypto]["daily"] == 1: # if a daily alert already exists
             self.bank[guild][crypto]["daily"] = 0
             self.bank[guild][crypto]["daily_lastalert"] = 0
             if self.bank[guild][crypto]["long_term"] == 0:
@@ -369,7 +361,7 @@ class StockWatch:
     async def remove_stock_alert_long_term(self, args, client, client_message):
         stock = args[1]
         guild = str(client_message.guild.id)
-        if stock in self.bank[guild] and self.bank[guild][stock]["type"] == "stock" and (self.bank[guild][stock]["long_term"] == 1): # if a daily alert already exists
+        if guild in self.bank and stock in self.bank[guild] and self.bank[guild][stock]["type"] == "stock" and self.bank[guild][stock]["long_term"] == 1:# if a daily alert already exists
             self.bank[guild][stock]["long_term"] = 0
             self.bank[guild][stock]["long_term_lastalert"] = 0
             if self.bank[guild][crypto]["daily"] == 0:
@@ -400,10 +392,10 @@ class StockWatch:
         if guild in self.bank:
             for alerts in self.bank[guild]:
                 if self.bank[guild][alerts]["long_term"] == 1:
-                    output += "(" + self.bank[guild][alerts]["type"] + ") " + alerts + " - NOTIFY THRESHOLD: " + str(self.bank[guild][alerts]["long_term_percent_change"] * 100) + "%"
+                    output += "(" + self.bank[guild][alerts]["type"] + ") " + alerts + " - NOTIFY THRESHOLD: " + format(self.bank[guild][alerts]["long_term_percent_change"] * 100, ".2f") + "%"
                     output += " [Long Term]\n"
                 elif self.bank[guild][alerts]["daily"] == 1:
-                    output += "(" + self.bank[guild][alerts]["type"] + ") " + alerts + " - NOTIFY THRESHOLD: " + str(self.bank[guild][alerts]["daily_percent_change"] * 100) + "%"
+                    output += "(" + self.bank[guild][alerts]["type"] + ") " + alerts + " - NOTIFY THRESHOLD: " + format(self.bank[guild][alerts]["daily_percent_change"] * 100, ".2f") + "%"
                     output += " [Daily]\n"
         if output == "":
             output = "No alerts are set up yet!"
