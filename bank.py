@@ -94,7 +94,7 @@ class Bank:
     async def increment(self, args, client, client_message):
         userid = str(self.get_user_id_from_message(args[1]))
         amt = abs(float(args[2].replace('\U00002013', '-')))
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         if not isinstance(amt, float):
             raise Exception("Incorrect type for amt") 
 
@@ -121,7 +121,7 @@ class Bank:
     async def decrement(self, args, client, client_message):
         userid = str(self.get_user_id_from_message(args[1]))
         amt = abs(float(args[2].replace('\U00002013', '-')))
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         print("decrement user: ", userid)
         print("decrement amt: ", amt)
         if not isinstance(amt, float):
@@ -150,7 +150,7 @@ class Bank:
     async def set_to(self, args, client, client_message):
         userid = str(self.get_user_id_from_message(args[1]))
         amt = float(args[2].replace('\U00002013', '-'))
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
 
         if guild in self.bank and userid in self.bank[guild] and ((self.bank[guild][userid] + amt) <= self.max_money) and ((self.bank[guild][userid] + amt) >= -self.max_money):
             self.bank[guild][userid] = amt
@@ -180,7 +180,7 @@ class Bank:
 
     #async def get_balance(self, userid, client, client_message):
     async def get_balance(self, args, client, client_message):
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         if len(args) > 1:
             userid = str(self.get_user_id_from_message(args[1]))
         else:
@@ -193,7 +193,7 @@ class Bank:
     
     #async def remove_id(self, userid, client, client_message):
     async def remove_id(self, args, client, client_message):
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         userid = str(self.get_user_id_from_message(args[1]))
         if guild in self.bank and userid in self.bank[guild]:
             self.bank[guild].pop(userid)
@@ -204,7 +204,7 @@ class Bank:
 
 
     async def all_balances(self, args, client, client_message):
-        guild = client_message.guild.id
+        guild = str(client_message.guild.id)
         output = ""
         if guild in self.bank:
             # https://careerkarma.com/blog/python-sort-a-dictionary-by-value/#:~:text=To%20sort%20a%20dictionary%20by%20value%20in%20Python%20you%20can,Dictionaries%20are%20unordered%20data%20structures.
