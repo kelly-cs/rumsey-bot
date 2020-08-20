@@ -13,7 +13,6 @@ import time
 #from asyncinit import asyncinit
 from enum import Enum
 from inspect import signature
-from concurrent.futures import ProcessPoolExecutor, CancelledError
 
 # TO INSTALL:
 # ENTER YOUR TOKEN INTO SELF.TOKEN AND PUT INTO SAME FOLDER AS BOT.PY
@@ -63,8 +62,8 @@ class StockWatch:
             "stock": [Command.GET_STOCK_INFO, 1, Flag.EVERYONE, "ticker | return stock price"],
             "getstock": [Command.GET_STOCK_INFO, 1, Flag.EVERYONE, "ticker | return stock price"],
             "getcrypto": [Command.GET_CRYPTO_INFO, 1, Flag.EVERYONE, "ticker | return crypto price [format: btcusd]"],
-            "stockalertdaily": [Command.WATCH_STOCK_DAILY, 2, Flag.EVERYONE,"ticker (percent: 10%) | notifies of stock changes above limit in 1 day"],
-            "stockalertlongterm": [Command.WATCH_STOCK_LONG_TERM, 2, Flag.EVERYONE,"ticker (percent: 10%) | notifies when stock changes above limit at any time"],
+            "stockalertdaily": [Command.WATCH_STOCK_DAILY, 2, Flag.EVERYONE,"ticker (percent: 0.10) | notifies of stock changes above limit in 1 day"],
+            "stockalertlongterm": [Command.WATCH_STOCK_LONG_TERM, 2, Flag.EVERYONE,"ticker (percent: 0.10) | notifies when stock changes above limit at any time"],
             "removestockalertdaily": [Command.REMOVE_STOCK_ALERT_DAILY, 1, Flag.EVERYONE,"ticker | removes a stock alert"],
             "removestockalertlongterm": [Command.REMOVE_STOCK_ALERT_LONG_TERM, 1, Flag.EVERYONE,"ticker | removes a stock alert"],
             "showalerts": [Command.SHOW_ALERTS, 0, Flag.EVERYONE, " show all stock/crypto alerts that are active"],
@@ -167,6 +166,7 @@ class StockWatch:
     async def print_stock_info(self, r, guild, channelid, stock, alert_subscribers, special_message=None):
         extra_message = ""
         channel = self.client.get_channel(channelid)
+        print("TRYING TO PRINT STOCK " + stock + " IN CHANNEL " + str(channelid))
         if not special_message == None:
             extra_message = "\n" + special_message
         current_price = float(r[0]["close"])
@@ -210,7 +210,7 @@ class StockWatch:
         stock = args[1] # returns stock name as string
         guild = str(client_message.guild.id)
         channel = client_message.channel.id
-        await self.print_stock_info(await self.get_stock_info(args), guild, channel, args[1], False)
+        await self.print_stock_info(await self.get_stock_info(args), guild, channel, stock, False)
 
     async def set_stock_alert_daily(self, args, client, client_message):
         try:
@@ -362,6 +362,7 @@ class StockWatch:
 
     async def print_crypto_info(self, r, guild, channelid, crypto, alert_subscribers, special_message=None):
         extra_message = ""
+        print("TRYING TO PRINT CRYPTO " + crypto + " IN CHANNEL " + str(channelid))
         channel = self.client.get_channel(channelid)
         try:
             if not special_message == None:
@@ -390,7 +391,7 @@ class StockWatch:
         crypto = args[1] # returns stock name as string
         channel = client_message.channel.id
         guild = str(client_message.guild.id)
-        await self.print_crypto_info(await self.get_crypto_info(args), channel, guild, args[1], False)
+        await self.print_crypto_info(await self.get_crypto_info(args), guild, channel, crypto, False)
        
     async def set_crypto_alert_daily(self, args, client, client_message):
         #try:
@@ -576,6 +577,8 @@ class StockWatch:
                 await client_message.channel.send("```Subscribers for stock: " + stock + "\n" + list_of_subs + "```" )
             else:
                 await client_message.channel.send("```No subscribers for stock: " + stock + "```")
+
+    # https://www.writebots.com/discord-text-formatting/
     def odd_or_even_coloring(self, number, message):
         if number % 2 == 0: #even
             return "```fix\n" + message + "\n```"
