@@ -34,6 +34,7 @@ class Command(Enum):
     REMOVE_CRYPTO_ALERT_LONG_TERM = 470
 
     SUBSCRIBE_TO_ALERT = 600
+    UNSUBSCRIBE_TO_ALERT = 601
     LIST_SUBSCRIBERS = 700
 
 class Flag(Enum):
@@ -72,6 +73,7 @@ class StockWatch:
             "removecryptoalertdaily": [Command.REMOVE_CRYPTO_ALERT_DAILY, 1, Flag.EVERYONE,"ticker | removes a crypto alert"],
             "removecryptoalertlongterm": [Command.REMOVE_CRYPTO_ALERT_LONG_TERM, 1, Flag.EVERYONE,"ticker | removes a crypto alert"],
             "subscribe": [Command.SUBSCRIBE_TO_ALERT, 1, Flag.EVERYONE,"ticker | subscribes to existing stock alert, to be notified"],
+            "unsubscribe": [Command.UNSUBSCRIBE_TO_ALERT, 1, Flag.EVERYONE,"ticker | unsubscribes from an existing stock alert"],
             "subscribers": [Command.LIST_SUBSCRIBERS, 1, Flag.EVERYONE,"ticker | lists all people subscribed to stock alert"]
         }
     # https://stackoverflow.com/questions/11479816/what-is-the-python-equivalent-for-a-case-switch-statement
@@ -90,6 +92,7 @@ class StockWatch:
         Command.WATCH_CRYPTO_DAILY: self.set_crypto_alert_daily,
         Command.WATCH_CRYPTO_LONG_TERM: self.set_crypto_alert_long_term,
         Command.SUBSCRIBE_TO_ALERT: self.subscribe_to_alert,
+        Command.UNSUBSCRIBE_TO_ALERT: self.unsubscribe_to_alert,
         Command.LIST_SUBSCRIBERS: self.list_subscribers
         }
 
@@ -555,12 +558,25 @@ class StockWatch:
         stock = args[1]
         guild = str(client_message.guild.id)
         if guild in self.bank and stock in self.bank[guild]: # if the alert exists
-            if not client_message.author.id  in self.bank[guild][stock]["subscribers"]: # if not already subscribed
-                self.bank[guild][stock]["subscribers"].append(int(client_message.author.id))
+            if not str(client_message.author.id)  in self.bank[guild][stock]["subscribers"]: # if not already subscribed
+                self.bank[guild][stock]["subscribers"].append(str(client_message.author.id))
                 await client_message.add_reaction("\U00002611")
                 self.write_to_file()
             else:
                 await client_message.channel.send("Looks like you're already subscribed to " + stock + "!")
+        else:
+            await client_message.channel.send("No alerts for " + stock + " yet. Make one first!")
+
+    async def unsubscribe_to_alert(self, args, client, client_message):
+        stock = args[1]
+        guild = str(client_message.guild.id)
+        if guild in self.bank and stock in self.bank[guild]: # if the alert exists
+            if str(client_message.author.id)  in self.bank[guild][stock]["subscribers"]: # if already subscribed
+                self.bank[guild][stock]["subscribers"].remove(str(client_message.author.id)) # remove the person from the list
+                await client_message.add_reaction("\U00002611")
+                self.write_to_file()
+            else:
+                await client_message.channel.send("Looks like you're already unsubscribed to " + stock + "!")
         else:
             await client_message.channel.send("No alerts for " + stock + " yet. Make one first!")
 
