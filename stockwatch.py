@@ -10,7 +10,6 @@ import discord
 import requests
 import asyncio
 import time
-#from asyncinit import asyncinit
 from enum import Enum
 from inspect import signature
 
@@ -43,7 +42,6 @@ class Flag(Enum):
     OWNER_ONLY = 284126954918248449
 
 
-#@asyncinit
 class StockWatch:
     def __init__(self, client, bank = "stock_alert.txt"):
         self.token = "" # ENTER YOUR TIINGO TOKEN HERE AS A STRING https://api.tiingo.com/
@@ -76,6 +74,7 @@ class StockWatch:
             "unsubscribe": [Command.UNSUBSCRIBE_TO_ALERT, 1, Flag.EVERYONE,"ticker | unsubscribes from an existing stock alert"],
             "subscribers": [Command.LIST_SUBSCRIBERS, 1, Flag.EVERYONE,"ticker | lists all people subscribed to stock alert"]
         }
+
     # https://stackoverflow.com/questions/11479816/what-is-the-python-equivalent-for-a-case-switch-statement
     # command is passed in as a pre-parsed list of args, arg[0] being the command
     async def handle_command(self, args, client, client_message):
@@ -397,7 +396,6 @@ class StockWatch:
         await self.print_crypto_info(await self.get_crypto_info(args), guild, channel, crypto, False)
        
     async def set_crypto_alert_daily(self, args, client, client_message):
-        #try:
         crypto = args[1]
         percent = float(args[2])
         guild = str(client_message.guild.id)

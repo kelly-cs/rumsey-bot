@@ -60,7 +60,7 @@ def get_help_single(cmd):
 async def on_ready():
     print("Logged in as  {0.user}".format(client))
     for mods in modules:
-        await mods.initial_bank_load()
+        await mods.initial_bank_load() # initialize all modules
 
 @client.event
 async def on_message(message):

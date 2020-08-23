@@ -27,7 +27,6 @@ class Bank:
         self.bank = {}
         self.file_to_open = bank_file
         self.dir = os.path.dirname(__file__) # absolute dir the script is running in 
-        #self.initial_bank_load()
         self.money_sign = "$"
         self.max_money = 9999999999
         self.message_size_limit = 1750
@@ -74,7 +73,6 @@ class Bank:
             bank_file.flush()
             bank_file.close()
             print("Bank loaded!")
-            #print(self.bank)
         else:
             bank_file = open(os.path.join(self.dir, self.file_to_open), "w")
             bank_file.flush()
@@ -90,7 +88,6 @@ class Bank:
         os.fsync(bank_file.fileno())
         bank_file.close()
 
-    #async def increment(self, userid, amt, client, client_message):
     async def increment(self, args, client, client_message):
         userid = str(self.get_user_id_from_message(args[1]))
         amt = abs(float(args[2].replace('\U00002013', '-')))
@@ -117,7 +114,6 @@ class Bank:
         else:
             raise Exception("user doesn't exist")            
 
-    #async def decrement(self, userid, amt, client, client_message):
     async def decrement(self, args, client, client_message):
         userid = str(self.get_user_id_from_message(args[1]))
         amt = abs(float(args[2].replace('\U00002013', '-')))
@@ -146,7 +142,6 @@ class Bank:
         else:
             raise Exception("user doesn't exist")
 
-    #async def set_to(self, userid, amt, client, client_message):
     async def set_to(self, args, client, client_message):
         userid = str(self.get_user_id_from_message(args[1]))
         amt = float(args[2].replace('\U00002013', '-'))
@@ -178,7 +173,6 @@ class Bank:
         else:
             raise Exception("user doesn't exist")
 
-    #async def get_balance(self, userid, client, client_message):
     async def get_balance(self, args, client, client_message):
         guild = str(client_message.guild.id)
         if len(args) > 1:
@@ -191,7 +185,6 @@ class Bank:
         else:
             raise Exception("user doesn't exist")
     
-    #async def remove_id(self, userid, client, client_message):
     async def remove_id(self, args, client, client_message):
         guild = str(client_message.guild.id)
         userid = str(self.get_user_id_from_message(args[1]))
