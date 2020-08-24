@@ -196,7 +196,7 @@ class StockWatch:
 
     async def get_stock_info(self, args):
         stock = args[1]
-        ''' https://finnhub.io/docs/api#quote
+        ''' TIINGO
         { SAMPLE RESPONSE
             [{"adjClose":0.0021,"adjHigh":0.0024,"adjLow":0.0013,"adjOpen":0.0014,"adjVolume":190908270,
             "close":0.0021,"date":"2020-08-14T00:00:00+00:00","divCash":0.0,"high":0.0024,"low":0.0013,"open":0.0014,"splitFactor":1.0,"volume":190908270}]
