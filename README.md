@@ -1,7 +1,8 @@
 # rumsey-bot
 A simple discord bot meant to handle web scraping, movie nights, and more.
 
-Current Modules:
+**Current Modules:**
+
 **Bank**
 - Allows admins to create a "bill" for every user on the server, and bill/deduct from it as needed.
 
