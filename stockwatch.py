@@ -44,7 +44,7 @@ class Flag(Enum):
 
 class StockWatch:
     def __init__(self, client, mongodb, bank = "stock_alert.txt"):
-        self.token = "" # ENTER YOUR TIINGO TOKEN HERE AS A STRING https://api.tiingo.com/
+        self.token = "17e85036d317e0f26afe84b4d564312e019b0e82" # ENTER YOUR TIINGO TOKEN HERE AS A STRING https://api.tiingo.com/
         self.current_watchers = 0
         self.watch_limit_per_server = 20
         self.watch_limit_all_servers = 100
@@ -307,7 +307,7 @@ class StockWatch:
             r = await self.get_crypto_info([None,crypto])
             print("crypto Watcher daily Routine Call Success: " + crypto)
             current_price = float(r[0]["priceData"][-1]["close"]) # get the last (most recent price) for the day
-            previous_close = self.bank[guild][stock]["long_term_initial_amount"] # get the first (midnight today price) for the day
+            previous_close = self.bank[guild][crypto]["long_term_initial_amount"] # get the first (midnight today price) for the day
             percent_difference = ((current_price - previous_close) / previous_close)
             if self.bank[guild][crypto]["long_term_lastalert"] != r[0]["priceData"][-1]["date"][0:(self.length_of_date_string_to_read-1)] and abs(percent_difference) > abs(self.bank[guild][crypto]["long_term_percent_change"]): # if the change is greater than the alert specification, and it isn't the same time
                 self.bank[guild][crypto]["long_term_lastalert"] = r[0]["priceData"][-1]["date"][0:(self.length_of_date_string_to_read-1)]
