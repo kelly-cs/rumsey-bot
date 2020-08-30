@@ -2,11 +2,16 @@ import discord
 import sys
 import asyncio
 import random
+import pymongo
+import dateutil.parser
 from bank import Bank
 from stockwatch import StockWatch
 
 # To RUN in CMD/Powershell/BASH:
 # >> python bot.py your-token-here
+
+
+mongodb_client = pymongo.MongoClient("")
 
 client = discord.Client()
 delimiter = "$"
@@ -14,9 +19,10 @@ delimiter = "$"
 
 
 # to install a new module, put a comma at the end of the bottom module and insert the call to the new module like Module()
+# pass in client and mongodb_client as well
 modules = [
-    Bank(),
-    StockWatch(client)
+    Bank(client, mongodb_client),
+    StockWatch(client, mongodb_client)
 ]
 
 commands = {}
@@ -81,7 +87,9 @@ async def on_message(message):
                     await message.channel.send(get_error_response())
             except:
                 await message.channel.send(get_error_response())
-        if args[0][1:] in commands: # remove delimiter and check
+        elif args[0][1:] == "test_mongo":
+            await message.channel.send("Temperature at " + "1984-03-05T13:00:00.000+00:00\n" + str(mongodb_client.sample_weatherdata.data.find_one({"ts": dateutil.parser.parse("1984-03-05T13:00:00.000+00:00")})["airTemperature"]["value"]))
+        elif args[0][1:] in commands: # remove delimiter and check
             owner_module = commands[args[0][1:]] # index of the owning module
             # print("ARGS GIVEN: ", len(args), "COMMAND ARGS: ", owner_module["nargs"])
             # print("MODULE: ", owner_module["module"])
