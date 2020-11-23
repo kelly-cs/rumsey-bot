@@ -206,7 +206,7 @@ class Bank:
             balances = [list(i) for i in sorted(self.bank[guild].items(), key=lambda x: x[1], reverse=True)]
 
             for sorted_users in balances:
-                print("sorting")
+                # print("sorting")
                 # to fix a problem that happened after a few months
                 try:
                     username = client.get_user(int(sorted_users[0])).name # if for whatever reason, rumsey cannot resolve the ID to an actual username (this has happened)
