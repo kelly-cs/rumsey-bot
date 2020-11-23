@@ -23,12 +23,11 @@ class Flag(Enum):
     OWNER_ONLY = 284126954918248449
 
 class Bank:
-    def __init__(self, client, mongodb, bank_file="bank.log"):
+    def __init__(self, client, bank_file="bank.log"):
         self.bank = {}
         self.file_to_open = bank_file # deprecated
         self.dir = os.path.dirname(__file__) # absolute dir the script is running in 
         self.money_sign = "$"
-        self.mongodb = mongodb
         self.max_money = 9999999999
         self.message_size_limit = 1750
         self.round_money_to_decimal = 2
