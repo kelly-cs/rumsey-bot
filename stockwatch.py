@@ -44,7 +44,7 @@ class Flag(Enum):
 
 class StockWatch:
     def __init__(self, client, mongodb, bank = "stock_alert.txt"):
-        self.token = "17e85036d317e0f26afe84b4d564312e019b0e82" # ENTER YOUR TIINGO TOKEN HERE AS A STRING https://api.tiingo.com/
+        self.token = "" # ENTER YOUR TIINGO TOKEN HERE AS A STRING https://api.tiingo.com/
         self.current_watchers = 0
         self.watch_limit_per_server = 20
         self.watch_limit_all_servers = 100
@@ -60,6 +60,7 @@ class StockWatch:
         self.time_between_requests = 1800
         self.commands = { # format: "command": [Enum flag, amt of args, permissions required, "help" to display]
             "stock": [Command.GET_STOCK_INFO, 1, Flag.EVERYONE, "ticker | return stock price"],
+            "crypto": [Command.GET_CRYPTO_INFO, 1, Flag.EVERYONE, "crypto | return crypto price"],
             "getstock": [Command.GET_STOCK_INFO, 1, Flag.EVERYONE, "ticker | return stock price"],
             "getcrypto": [Command.GET_CRYPTO_INFO, 1, Flag.EVERYONE, "ticker | return crypto price [format: btcusd]"],
             "stockalertdaily": [Command.WATCH_STOCK_DAILY, 2, Flag.EVERYONE,"ticker (percent: 0.10) | notifies of stock changes above limit in 1 day"],

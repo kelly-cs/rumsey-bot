@@ -11,7 +11,7 @@ from stockwatch import StockWatch
 # >> python bot.py your-token-here
 
 
-mongodb_client = pymongo.MongoClient("")
+mongodb_client = pymongo.MongoClient("mongodb+srv://rumsey_main:ZAePo7dJqRvG55Oj@rumsey.oszat.mongodb.net/sample_weatherdata?retryWrites=true&w=majority")
 
 client = discord.Client()
 delimiter = "$"

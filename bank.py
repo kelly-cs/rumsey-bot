@@ -24,7 +24,7 @@ class Flag(Enum):
 
 class Bank:
     def __init__(self, client, mongodb, bank_file="bank.log"):
-        self.bank = mongodb.rumsey.bank #
+        self.bank = {}
         self.file_to_open = bank_file # deprecated
         self.dir = os.path.dirname(__file__) # absolute dir the script is running in 
         self.money_sign = "$"
@@ -68,8 +68,7 @@ class Bank:
             raise Exception("Invalid command for Bank")
 
     async def initial_bank_load(self):
-        pass
-        ''' Deprecated - using mongodb should negate the need for file handling like this.
+        # Deprecated - using mongodb should negate the need for file handling like this.
         if os.path.exists(os.path.join(self.dir, self.file_to_open)) and os.path.getsize(os.path.join(self.dir, self.file_to_open)) > 0: # if there's data in there
             bank_file = open(os.path.join(self.dir, self.file_to_open), "r")
             self.bank = json.loads(bank_file.read()) # Json to Dictionary
@@ -82,17 +81,14 @@ class Bank:
             bank_file.close()
             print("Bank() new bank created")
             self.bank = {}
-        '''
 
     def write_to_file(self):
-        pass
-        ''' Deprecated - using mongodb should negate the need for file handling like this.
+        # Deprecated - using mongodb should negate the need for file handling like this.
         bank_file = open(os.path.join(self.dir, self.file_to_open), "w")
         bank_file.write(json.dumps(self.bank)) # not very efficient
         bank_file.flush()
         os.fsync(bank_file.fileno())
         bank_file.close()
-        '''
 
     async def increment(self, args, client, client_message):
         userid = str(self.get_user_id_from_message(args[1]))
