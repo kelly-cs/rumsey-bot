@@ -183,7 +183,7 @@ class Bank:
             userid = str(self.get_user_id_from_message(client_message.author.id))
         print("userid for get_balance: ", userid)
         if guild in self.bank and userid in self.bank[guild]:
-            await client_message.channel.send(client.get_user(int(userid)).display_name + "\'s balance is " + self.money_sign + str(format(self.bank[guild][str(userid)], '.'+str(self.round_money_to_decimal)+'f')))
+            await client_message.channel.send(client.get_user(int(userid)).display_name + "\'s balance is " + self.money_sign + str(format(self.bank[guild][str(userid)], '.' + str(self.round_money_to_decimal)+'f')))
         else:
             raise Exception("user doesn't exist")
     
@@ -206,6 +206,7 @@ class Bank:
             balances = [list(i) for i in sorted(self.bank[guild].items(), key=lambda x: x[1], reverse=True)]
 
             for sorted_users in balances:
+                print("sorting")
                 username = client.get_user(int(sorted_users[0])).name
                 sorted_users[1] = float(sorted_users[1])
                 if sorted_users[1] >= self.max_money:
