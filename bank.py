@@ -207,7 +207,11 @@ class Bank:
 
             for sorted_users in balances:
                 print("sorting")
-                username = client.get_user(int(sorted_users[0])).name
+                # to fix a problem that happened after a few months
+                try:
+                    username = client.get_user(int(sorted_users[0])).name # if for whatever reason, rumsey cannot resolve the ID to an actual username (this has happened)
+                except:
+                    username = "Unknown User"
                 sorted_users[1] = float(sorted_users[1])
                 if sorted_users[1] >= self.max_money:
                     sorted_users[1] = self.max_money
