@@ -1,5 +1,5 @@
 # rumsey-bot
-A simple discord bot meant to handle web scraping, movie nights, and more.
+A simple discord bot meant to handle user billing, stock market notifications, voice alerts, and more.
 
 **Current Modules:**
 
