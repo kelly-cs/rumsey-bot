@@ -43,7 +43,7 @@ class Flag(Enum):
 
 
 class StockWatch:
-    def __init__(self, client, bank = "stock_alert.txt"):
+    def __init__(self, client, bank = "stock_alert.log"):
         self.token = "" # ENTER YOUR TIINGO TOKEN HERE AS A STRING https://api.tiingo.com/
         self.current_watchers = 0
         self.watch_limit_per_server = 20

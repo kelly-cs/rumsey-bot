@@ -6,6 +6,7 @@ import pymongo
 import dateutil.parser
 from bank import Bank
 from stockwatch import StockWatch
+from voicealert import VoiceAlert
 
 # To RUN in CMD/Powershell/BASH:
 # >> python bot.py your-token-here
@@ -19,7 +20,8 @@ delimiter = "$"
 # pass in client
 modules = [
     Bank(client),
-    StockWatch(client)
+    StockWatch(client),
+    VoiceAlert(client)
 ]
 
 commands = {}
