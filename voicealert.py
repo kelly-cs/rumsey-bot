@@ -92,6 +92,11 @@ class VoiceAlert:
             print(self.music_files)
             print("VoiceAlert new bank created")
 
+        for guilds in self.bank:
+            if "rust_voice_alert_enabled" in guilds and "set_alert_channel" in guilds:
+                if guilds["rust_voice_alert_enabled"] == True:
+                    self.watch_channel_for_updates(client.get_channel(int(guilds["set_alert_channel"])))
+
     def write_to_file(self):
         # Deprecated - using mongodb should negate the need for file handling like this.
         bank_file = open(os.path.join(self.dir, self.file_to_open), "w")

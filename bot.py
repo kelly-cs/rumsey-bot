@@ -7,6 +7,7 @@ import dateutil.parser
 from bank import Bank
 from stockwatch import StockWatch
 from voicealert import VoiceAlert
+from autopublish import AutoPublish
 
 # To RUN in CMD/Powershell/BASH:
 # >> python bot.py your-token-here
@@ -21,7 +22,8 @@ delimiter = "$"
 modules = [
     Bank(client),
     StockWatch(client),
-    VoiceAlert(client)
+    VoiceAlert(client),
+    AutoPublish(client)
 ]
 
 commands = {}
@@ -51,14 +53,18 @@ def get_user_id_from_message(msg):
 
 def get_help_all():
     output = "```"
-    for cmd in commands:
-        print(cmd)
-        output += "(" + modules[commands[cmd]["module"]].__class__.__name__ + ") " + cmd + " | " + commands[cmd]["help"] + "\n"
+    for mod in modules:
+        output += "(" + mod.__class__.__name__ + ")\n"
     output += "```"
     return output
 
-def get_help_single(cmd):
-    return  "```" + cmd + " | " + commands[cmd]["help"] + "\n```" 
+def get_help_module(module):
+    output = "```"
+    for cmd in commands:
+        if modules[commands[cmd]["module"]].__class__.__name__ == module:
+            output += "(" + modules[commands[cmd]["module"]].__class__.__name__ + ") " + cmd + " | " + commands[cmd]["help"] + "\n"
+    output += "```"
+    return output
 
 # https://discordpy.readthedocs.io/en/latest/quickstart.html
 @client.event
@@ -79,9 +85,9 @@ async def on_message(message):
         if args[0][1:] == "help" or args[0][1:] == "commands":
             try:
                 if len(args) == 1: # list all commands
-                    await message.channel.send(get_help_all())
+                    await message.channel.send(get_help_all()) #
                 elif len(args) == 2: # list 1 command
-                    await message.channel.send(get_help_single(args[1]))
+                    await message.channel.send(get_help_module(args[1]))
                 else:
                     await message.channel.send(get_error_response())
             except:
