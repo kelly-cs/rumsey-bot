@@ -102,24 +102,36 @@ class VoiceAlert:
 
     async def enable_rust_voice_alert(self, args, client, client_message):
         guild = str(client_message.guild.id)
-        if self.bank[guild]["rust_voice_alert_enabled"] == False:
-            self.bank[guild]["rust_voice_alert_enabled"] = True
-            self.write_to_file()
+        if guild not in self.bank:
+            self.bank[guild] = {}
+        self.bank[guild]["rust_voice_alert_enabled"] = True
+        self.write_to_file()
+        if "set_alert_channel" in self.bank[guild]:
+            alert_channel = client.get_channel(int(self.bank[guild]["set_alert_channel"]))
+            await self.watch_channel_for_updates(alert_channel)
+            await client_message.channel.send("Got it. Voice alerts enabled on " + alert_channel.name)
+        else:
+            await client_message.channel.send("You haven't set an alert channel to watch yet. Try that first.")
 
     async def disable_rust_voice_alert(self, args, client, client_message):
         guild = str(client_message.guild.id)
-        if self.bank[guild]["rust_voice_alert_enabled"] == True:
-            self.bank[guild]["rust_voice_alert_enabled"] = False
-            self.write_to_file()
+        if guild not in self.bank:
+            self.bank[guild] = {}
+        self.bank[guild]["rust_voice_alert_enabled"] = False
+        self.write_to_file()
         
     async def modify_voice_language(self, args, client, client_message):
         guild = str(client_message.guild.id)
+        if guild not in self.bank:
+            self.bank[guild] = {}
         if self.bank[guild]["voice_language"] != args[1] and args[1] in self.allowed_languages: # if the language is different than specified in the command
             self.bank[guild]["voice_language"] = args[1]
             self.write_to_file()
 
     async def modify_voice_speed(self, args, client, client_message):
         guild = str(client_message.guild.id)
+        if guild not in self.bank:
+            self.bank[guild] = {}
         if self.bank[guild]["voice_speed"] != args[1] and args[1] in self.allowed_speeds: # if the speed is different than specified in the command
             self.voice_language = args[1]
             self.bank[guild]["voice_speed"] = args[1]
@@ -127,16 +139,26 @@ class VoiceAlert:
 
     async def music_set(self, args, client, client_message):
         guild = str(client_message.guild.id)
+        if guild not in self.bank:
+            self.bank[guild] = {}
         if self.bank[guild]["current_song"] != args[1] and (args[1] == "off" or args[1] == "random" or args[1] < len(self.music_files)):
             self.bank[guild]["current_song"] = args[1]
             self.write_to_file()
 
     # https://stackoverflow.com/questions/62494399/how-to-play-gtts-mp3-file-in-discord-voice-channel-the-user-is-in-discord-py
-    async def say(self, args, client, client_message):
-        guild = str(client_message.guild.id)
-        member = client_message.author # get the member object from msg
-        channel_to_join = member.voice.channel # get the VoiceChannel object from Member.voice object
-        tts_message = client_message.content[4:] # remove this magic number later..
+    async def say(self, args, client, client_message, channel_to_join=None):
+        guild = "" 
+        tts_message = ""
+        if channel_to_join != None:
+            if channel_to_join.type == discord.ChannelType.voice:
+                guild = str(channel_to_join.guild.id)
+                channel_to_join = channel_to_join # assume it's a channel
+                tts_message = str(client_message)
+        else:
+            guild = str(client_message.guild.id)
+            member = client_message.author # get the member object from msg
+            channel_to_join = member.voice.channel # get the VoiceChannel object from Member.voice object
+            tts_message = client_message.content[4:] # remove this magic number later..
         tts = gTTS(text=tts_message, lang="en") # make this support other languages later
         try:
             os.remove(self.dir + "\\" + guild + ".mp3")
@@ -186,16 +208,26 @@ class VoiceAlert:
     # sets the other guilds to notify
     async def set_alert_channel(self, args, client, client_message):
         guild = str(client_message.guild.id)
+        message_channel = self.client.get_channel(client_message.channel.id)
         channelid = args[1] # this will be the id for the channel
         if guild in self.bank:
             self.bank[guild]["set_alert_channel"] = str(self.get_user_id_from_message(channelid))
+            if "last_alert_message" not in self.bank[guild]: # if no alert has been triggered yet
+                self.bank[guild]["last_alert_message"] = "none"
+            if "rust_voice_alert_enabled" not in self.bank[guild]: # if no alert has been triggered yet
+                self.bank[guild]["rust_voice_alert_enabled"] = False
         else:
             self.bank[guild] = {}
+            self.bank[guild]["last_alert_message"] = "none"
+            self.bank[guild]["rust_voice_alert_enabled"] = False
             self.bank[guild]["set_alert_channel"] = str(self.get_user_id_from_message(channelid))
+            await message_channel.send("This is a new channel - make sure to manually turn on Rust voice alerts to be activated.")
         self.write_to_file()
-        message_channel = self.client.get_channel(client_message.channel.id)
+        
         alert_channel = self.client.get_channel(int(self.get_user_id_from_message(channelid)))
         await message_channel.send("I'll watch " + alert_channel.name + " for updates.")
+        await asyncio.gather(self.watch_channel_for_updates(alert_channel))
+        
 
     # pass in a Guild object, not a guildid!
     # returns a VoiceChannel
@@ -204,7 +236,7 @@ class VoiceAlert:
         largest_amt_users = 0
         for channel in guild.channels: # returns a generator, so it works like a for loop.
             if channel.type == discord.ChannelType.voice:
-                if len(channel.members) > 0 and len(channel.members > largest_amt_users):
+                if len(channel.members) > 0 and len(channel.members) > largest_amt_users:
                     most_populated_channel = channel
                     largest_amt_users = len(channel.members)
         return most_populated_channel
@@ -247,7 +279,24 @@ class VoiceAlert:
     # we can add fancier ways of triggering this later, like sending http requests over the network
     # but right now I don't care
     async def trigger_alert(self, message_to_say, guilds_to_join):
-        pass
+        print("triggering voice alert")
+        voice_channel_to_join = await self.get_most_populated_channel_in_guild(guilds_to_join)
+        await self.say(message_to_say, self.client, message_to_say, voice_channel_to_join)
+
+    # pass in a Channel object, not an id.
+    async def watch_channel_for_updates(self, channel):
+        #print("Watching " + str(channel.id) + " for voice alert updates.")
+        if self.bank[str(channel.guild.id)]["rust_voice_alert_enabled"] == False:
+            return
+        async for message in channel.history(limit=1):
+            print(message.content)
+            if message.id != self.bank[str(channel.guild.id)]["last_alert_message"]: # if the id is different it's a new message - this is inefficient, but due to how i handle messages in bot.py.
+                await self.trigger_alert(message.content, message.guild)
+                self.bank[str(channel.guild.id)]["last_alert_message"] = message.id
+                self.write_to_file()
+
+        await asyncio.sleep(5)
+        await asyncio.gather(self.watch_channel_for_updates(channel))
 
     def get_user_id_from_message(self, msg):
         output = ""
