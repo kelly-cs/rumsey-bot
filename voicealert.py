@@ -17,7 +17,7 @@ class Command(Enum):
     MODIFY_VOICE_LANGUAGE = 200
     MODIFY_VOICE_SPEED = 201
     SAY = 300
-    SET_ALERT_GUILDS = 400
+    SET_ALERT_CHANNEL = 400
     SET_MUSIC = 500
     SHOW_MUSIC_TRACKS = 501
 
@@ -30,6 +30,7 @@ class VoiceAlert:
     def __init__(self, client, bank_file="voicealert.log"):
         self.dir = os.path.dirname(__file__) # absolute dir the script is running in 
         self.bank = {}
+        self.client = client
         self.file_to_open = bank_file
         self.music_directory = "music" # dir where music is stored
         self.music_files = os.listdir(os.path.normpath(self.dir) + "\\" + self.music_directory) # this will also pick up directories. Don't put extra directories here.
@@ -45,8 +46,8 @@ class VoiceAlert:
             "disablerustvoicealert": [Command.DISABLE_RUST_VOICE_ALERT, 0, Flag.ADMIN_ONLY,""],
             "voicelanguage": [Command.MODIFY_VOICE_LANGUAGE, 1, Flag.ADMIN_ONLY,"(language, ie english)"],
             "voicespeed": [Command.MODIFY_VOICE_SPEED, 1, Flag.ADMIN_ONLY,"(slow|normal)"],
-            "say": [Command.SAY, 1, Flag.EVERYONE,"(text to say)"],
-            "setvoicealertchannel": [Command.SET_ALERT_GUILDS, 1, Flag.ADMIN_ONLY,"(guildids to notify, comma separated)"],
+            "say": [Command.SAY, 1, Flag.ADMIN_ONLY,"(text to say)"],
+            "setvoicealertchannel": [Command.SET_ALERT_CHANNEL, 1, Flag.ADMIN_ONLY,"(guildids to notify, comma separated)"],
             "voicealertmusic": [Command.SET_MUSIC, 1, Flag.EVERYONE, "(off, random, 0-1-2-3 for specific song)"],
             "showvoicealertsounds": [Command.SHOW_MUSIC_TRACKS, 0, Flag.EVERYONE, ""]
         }
@@ -59,7 +60,7 @@ class VoiceAlert:
             Command.MODIFY_VOICE_LANGUAGE: self.modify_voice_language,
             Command.MODIFY_VOICE_SPEED: self.modify_voice_speed,
             Command.SAY: self.say,
-            Command.SET_ALERT_GUILDS: self.set_alert_guilds,
+            Command.SET_ALERT_CHANNEL: self.set_alert_channel,
             Command.SET_MUSIC: self.set_music,
             Command.SHOW_MUSIC_TRACKS: self.show_music_tracks
         }
@@ -91,17 +92,6 @@ class VoiceAlert:
             print(self.music_files)
             print("VoiceAlert new bank created")
 
-    # helper function that will initialize a new guild in the system on first use
-    async def create_new_guild_in_bank(self, client_message):
-            guild = str(client_message.guild.id)
-            self.bank[guild]["rust_voice_alert_enabled"] = self.rust_voice_alert_enabled # True or FAlse
-            self.bank["music_files"] = [] # list, not dictionary. this lets us index them. List of filenames
-            self.bank[guild]["current_song"] = self.music_set # off, random, or a number
-            self.bank[guild]["voice_speed"] = self.voice_speed # slow, normal
-            self.bank[guild]["voice_language"] = self.voice_language # english, french, etc
-            self.bank[guild]["voice_alert_guilds"] = self.voice_alert_guilds # what guilds to join and alert when triggered.
-            self.write_to_file()
-
     def write_to_file(self):
         # Deprecated - using mongodb should negate the need for file handling like this.
         bank_file = open(os.path.join(self.dir, self.file_to_open), "w")
@@ -130,7 +120,7 @@ class VoiceAlert:
 
     async def modify_voice_speed(self, args, client, client_message):
         guild = str(client_message.guild.id)
-        if self.bank[guild]["voice_speed"] != args[1] and args[1] in self.allowed_speeds: # if the language is different than specified in the command
+        if self.bank[guild]["voice_speed"] != args[1] and args[1] in self.allowed_speeds: # if the speed is different than specified in the command
             self.voice_language = args[1]
             self.bank[guild]["voice_speed"] = args[1]
             self.write_to_file()
@@ -187,7 +177,6 @@ class VoiceAlert:
                 os.remove(self.dir + "\\" + guild + ".mp3")
             except:
                 print("couldnt remove " + self.dir + "\\" + guild + ".mp3")
-            return
 
         # Handle the exceptions that can occur
         #except Exception as e:
@@ -195,18 +184,63 @@ class VoiceAlert:
             
         
     # sets the other guilds to notify
-    async def set_alert_guilds(self, args, client, client_message):
+    async def set_alert_channel(self, args, client, client_message):
         guild = str(client_message.guild.id)
-        pass
+        channelid = args[1] # this will be the id for the channel
+        if guild in self.bank:
+            self.bank[guild]["set_alert_channel"] = str(self.get_user_id_from_message(channelid))
+        else:
+            self.bank[guild] = {}
+            self.bank[guild]["set_alert_channel"] = str(self.get_user_id_from_message(channelid))
+        self.write_to_file()
+        message_channel = self.client.get_channel(client_message.channel.id)
+        alert_channel = self.client.get_channel(int(self.get_user_id_from_message(channelid)))
+        await message_channel.send("I'll watch " + alert_channel.name + " for updates.")
 
     # pass in a Guild object, not a guildid!
     # returns a VoiceChannel
     async def get_most_populated_channel_in_guild(self, guild):
+        most_populated_channel = "None"
+        largest_amt_users = 0
+        for channel in guild.channels: # returns a generator, so it works like a for loop.
+            if channel.type == discord.ChannelType.voice:
+                if len(channel.members) > 0 and len(channel.members > largest_amt_users):
+                    most_populated_channel = channel
+                    largest_amt_users = len(channel.members)
+        return most_populated_channel
+
     async def set_music(self, args, client, client_message):
-        pass
+        guild = str(client_message.guild.id)
+        channel = self.client.get_channel(client_message.channel.id)
+        music_id = 0
+        if guild not in self.bank:
+            self.bank[guild] = {}
+        if args[1] == "off":
+            self.bank[guild]["set_music"] = "off"
+            await channel.send("Set the alert sound to: off")
+        elif args[1] == "random":
+            self.bank[guild]["set_music"] = "random"
+            await channel.send("Set the alert sound to: random")
+        elif args[1].isnumeric():
+            music_id = int(args[1]) # this will be the id for the channel
+            self.bank[guild]["set_music"] = music_id
+            await channel.send("Set the alert sound to: " + str(music_id) + " - " + self.music_files[music_id])
+        else:
+            await channel.send("You screwed that up somehow")
+            return
+        self.write_to_file()
+        
+        
 
     async def show_music_tracks(self, args, client, client_message):
-        pass
+        output = ""
+        index = 0
+        for songs in self.music_files:
+            output += str(index) + " - " + songs + "\n"
+            index += 1
+        channel = self.client.get_channel(client_message.channel.id)
+        await channel.send(output)
+
 
     # right now, the "trigger" will simply be listening to a discord channel for new messages.
     # these messages are assumed to come from a webhook where the rust notifications come from.
