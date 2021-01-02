@@ -69,7 +69,7 @@ class AutoPublish:
             if "autopublish_enabled" in self.bank[guilds] and "autopublish_channel" in self.bank[guilds]:
                 if self.bank[guilds]["autopublish_enabled"] == True:
                     print("successfully loaded autopublish for " + str(guilds))
-                    await asyncio.gather(self.watch_channel_for_updates(self.client.get_channel(int(self.bank[guilds]["autopublish_channel"]))))
+                    asyncio.gather(self.watch_channel_for_updates(self.client.get_channel(int(self.bank[guilds]["autopublish_channel"]))))
 
     def write_to_file(self):
         # Deprecated - using mongodb should negate the need for file handling like this.
@@ -143,7 +143,7 @@ class AutoPublish:
             self.write_to_file()
             return
         async for message in channel.history(limit=1):
-            #print("publishing " + str(message.content))
+            ("publishing " + str(message.content))
             try:
                 await message.publish()
             except:

@@ -93,9 +93,9 @@ class VoiceAlert:
             print("VoiceAlert new bank created")
 
         for guilds in self.bank:
-            if "rust_voice_alert_enabled" in guilds and "set_alert_channel" in guilds:
-                if guilds["rust_voice_alert_enabled"] == True:
-                    self.watch_channel_for_updates(client.get_channel(int(guilds["set_alert_channel"])))
+            if "rust_voice_alert_enabled" in self.bank[guilds] and "set_alert_channel" in self.bank[guilds]:
+                if self.bank[guilds]["rust_voice_alert_enabled"] == True:
+                    asyncio.gather(self.watch_channel_for_updates(self.client.get_channel(int(self.bank[guilds]["set_alert_channel"]))))
 
     def write_to_file(self):
         # Deprecated - using mongodb should negate the need for file handling like this.
@@ -146,9 +146,10 @@ class VoiceAlert:
         guild = str(client_message.guild.id)
         if guild not in self.bank:
             self.bank[guild] = {}
-        if self.bank[guild]["current_song"] != args[1] and (args[1] == "off" or args[1] == "random" or args[1] < len(self.music_files)):
-            self.bank[guild]["current_song"] = args[1]
+        if args[1] == "off" or args[1] == "random" or args[1] < len(self.music_files):
+            self.bank[guild]["set_music"] = args[1]
             self.write_to_file()
+
 
     # https://stackoverflow.com/questions/62494399/how-to-play-gtts-mp3-file-in-discord-voice-channel-the-user-is-in-discord-py
     async def say(self, args, client, client_message, channel_to_join=None):
@@ -159,6 +160,8 @@ class VoiceAlert:
                 guild = str(channel_to_join.guild.id)
                 channel_to_join = channel_to_join # assume it's a channel
                 tts_message = str(client_message)
+
+
         else:
             guild = str(client_message.guild.id)
             member = client_message.author # get the member object from msg
@@ -174,7 +177,7 @@ class VoiceAlert:
         if channel_to_join != None:
             vc = await channel_to_join.connect() # join the channel, returns VoiceClient
             try:
-                music_to_play = self.bank[guild][current_song] # get current song setting for this channel
+                music_to_play = self.bank[guild]["set_music"] # get current song setting for this channel
             except:
                 music_to_play = "random"
             try:
@@ -294,7 +297,7 @@ class VoiceAlert:
         if self.bank[str(channel.guild.id)]["rust_voice_alert_enabled"] == False:
             return
         async for message in channel.history(limit=1):
-            print(message.content)
+            #print(message.content)
             if message.id != self.bank[str(channel.guild.id)]["last_alert_message"]: # if the id is different it's a new message - this is inefficient, but due to how i handle messages in bot.py.
                 await self.trigger_alert(message.content, message.guild)
                 self.bank[str(channel.guild.id)]["last_alert_message"] = message.id
