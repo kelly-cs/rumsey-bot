@@ -197,7 +197,7 @@ class VoiceAlert:
             while vc.is_playing():
                 await asyncio.sleep(0.25)
             try:
-                await vc.play(discord.FFmpegPCMAudio(self.dir + "\\" guild + ".mp3")) # this is the tts
+                await vc.play(discord.FFmpegPCMAudio(self.dir + "\\" + guild + ".mp3")) # this is the tts
             except:
                 pass
             while vc.is_playing():
