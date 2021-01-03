@@ -28,12 +28,13 @@ class Flag(Enum):
 
 class VoiceAlert:
     def __init__(self, client, bank_file="voicealert.log"):
-        self.dir = os.path.dirname(__file__) # absolute dir the script is running in 
+        self.dir = os.path.dirname(__file__) # absolute dir the script is running in. IF RUNNING AS A BACKGROUND SERVICE, MANUALLY ENTER THIS DIRECTORY!
         self.bank = {}
         self.client = client
         self.file_to_open = bank_file
         self.music_directory = "music" # dir where music is stored
         self.music_files = os.listdir(os.path.normpath(self.dir) + "\\" + self.music_directory) # this will also pick up directories. Don't put extra directories here.
+        self.tts_save_directory = ""
         self.voice_alert_channel = "" # loaded from bank
         self.allowed_languages = ["english", "spanish"]
         self.allowed_speeds = ["slow", "normal"]
