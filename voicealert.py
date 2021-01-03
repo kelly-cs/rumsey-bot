@@ -34,7 +34,6 @@ class VoiceAlert:
         self.file_to_open = bank_file
         self.music_directory = "music" # dir where music is stored
         self.music_files = os.listdir(os.path.normpath(self.dir) + "\\" + self.music_directory) # this will also pick up directories. Don't put extra directories here.
-        self.tts_save_directory = ""
         self.voice_alert_channel = "" # loaded from bank
         self.allowed_languages = ["english", "spanish"]
         self.allowed_speeds = ["slow", "normal"]
@@ -185,11 +184,11 @@ class VoiceAlert:
                 if music_to_play != "off":
                     if music_to_play == "random":
                         song_to_select = randrange(len(self.music_files))
-                        await vc.play(discord.FFmpegPCMAudio(self.music_directory + "\\" + self.music_files[song_to_select])) # random song
+                        await vc.play(discord.FFmpegPCMAudio(self.dir + "\\" + self.music_directory + "\\" + self.music_files[song_to_select])) # random song
                         vc.source = discord.PCMVolumeTransformer(vc.source)
                         vc.source.volume = 1 # 0 to 1
                     else: # assume it is an integer, could be a security issue
-                        await vc.play(discord.FFmpegPCMAudio(self.music_directory + "\\" + self.music_files[music_to_play])) # specific song
+                        await vc.play(discord.FFmpegPCMAudio(self.dir + "\\" + self.music_directory + "\\" + self.music_files[music_to_play])) # specific song
                         vc.source = discord.PCMVolumeTransformer(vc.source)
                         vc.source.volume = 1 # 0 to 1
             except: # this is shitty and here to just keep the code working
@@ -198,7 +197,7 @@ class VoiceAlert:
             while vc.is_playing():
                 await asyncio.sleep(0.25)
             try:
-                await vc.play(discord.FFmpegPCMAudio(guild + ".mp3")) # this is the tts
+                await vc.play(discord.FFmpegPCMAudio(self.dir + "\\" guild + ".mp3")) # this is the tts
             except:
                 pass
             while vc.is_playing():
