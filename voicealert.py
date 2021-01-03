@@ -169,10 +169,10 @@ class VoiceAlert:
             tts_message = client_message.content[4:] # remove this magic number later..
         tts = gTTS(text=tts_message, lang="en") # make this support other languages later
         try:
-            os.remove(self.dir + "\\" + guild + ".mp3")
+            os.remove(os.path.normpath(self.dir) + "\\" + guild + ".mp3")
         except:
             pass
-        tts.save(guild + ".mp3")
+        tts.save(os.path.normpath(self.dir) + "\\" + guild + ".mp3")
         #try:
         if channel_to_join != None:
             vc = await channel_to_join.connect() # join the channel, returns VoiceClient
@@ -204,7 +204,7 @@ class VoiceAlert:
                 await asyncio.sleep(1)
             await vc.disconnect()
             try:
-                os.remove(self.dir + "\\" + guild + ".mp3")
+                os.remove(os.path.normpath(self.dir) + "\\" + guild + ".mp3")
             except:
                 print("couldnt remove " + self.dir + "\\" + guild + ".mp3")
 
@@ -297,14 +297,14 @@ class VoiceAlert:
         if self.bank[str(channel.guild.id)]["rust_voice_alert_enabled"] == False:
             return
         async for message in channel.history(limit=1):
-            #print(message.content)
+            print(message.content)
             if message.id != self.bank[str(channel.guild.id)]["last_alert_message"]: # if the id is different it's a new message - this is inefficient, but due to how i handle messages in bot.py.
                 await self.trigger_alert(message.content, message.guild)
                 self.bank[str(channel.guild.id)]["last_alert_message"] = message.id
                 self.write_to_file()
 
         await asyncio.sleep(5)
-        await asyncio.gather(self.watch_channel_for_updates(channel))
+        asyncio.gather(self.watch_channel_for_updates(channel))
 
     def get_user_id_from_message(self, msg):
         output = ""
