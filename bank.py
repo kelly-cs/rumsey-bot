@@ -12,10 +12,12 @@ class Command(Enum):
     INCREMENT = 100
     DECREMENT = 200
     SET_TO = 300
+    RESET_ALL = 301
     GET_BALANCE_SELF = 400
     GET_BALANCE_OTHER = 401
     ALL_BALANCES = 500
     REMOVE_RECORD = 600
+    REMOVE_ALL_RECORDS = 601
 
 class Flag(Enum):
     EVERYONE = 100
@@ -38,10 +40,12 @@ class Bank:
             "deduct": [Command.DECREMENT, 2, Flag.ADMIN_ONLY,"@user amount"],
             "setbalance": [Command.SET_TO, 2, Flag.ADMIN_ONLY,"@user amount"],
             "set": [Command.SET_TO, 2, Flag.ADMIN_ONLY,"@user amount"],
+            "resetall": [Command.RESET_ALL, 0, Flag.ADMIN_ONLY,"(resets all records to $0)"],
             "mybalance": [Command.GET_BALANCE_SELF, 0, Flag.EVERYONE,""],
             "balance": [Command.GET_BALANCE_OTHER, 1, Flag.EVERYONE,"@user"],
             "balances": [Command.ALL_BALANCES, 0, Flag.EVERYONE, ""],
-            "removeid": [Command.REMOVE_RECORD, 1, Flag.ADMIN_ONLY, "@user"]
+            "removeid": [Command.REMOVE_RECORD, 1, Flag.ADMIN_ONLY, "@user"],
+            "removeallids": [Command.REMOVE_ALL_RECORDS, 0, Flag.ADMIN_ONLY, "(removes ALL ids on the server from Bank)"]
         }
     # https://stackoverflow.com/questions/11479816/what-is-the-python-equivalent-for-a-case-switch-statement
     # command is passed in as a pre-parsed list of args, arg[0] being the command
@@ -50,10 +54,12 @@ class Bank:
             Command.INCREMENT: self.increment,
             Command.DECREMENT: self.decrement,
             Command.SET_TO: self.set_to,
+            Command.RESET_ALL: self.reset_all,
             Command.GET_BALANCE_SELF: self.get_balance,
             Command.GET_BALANCE_OTHER: self.get_balance,
             Command.ALL_BALANCES: self.all_balances,
-            Command.REMOVE_RECORD: self.remove_id
+            Command.REMOVE_RECORD: self.remove_id,
+            Command.REMOVE_ALL_RECORDS: self.remove_all
         }
         if args[0][1:] in self.commands:
             if self.commands[args[0][1:]][2] == Flag.EVERYONE:
@@ -186,6 +192,24 @@ class Bank:
         else:
             raise Exception("user doesn't exist")
     
+    async def reset_all(self, args, client, client_message):
+        guild = str(client_message.guild.id)
+        for person in self.bank[guild]:
+            print("resetting " + str(person))
+            await self.set_to([0,person,"0"], client, client_message) # the [0,] is a lazy fix because the function reads args[1] and args[2]
+            await client_message.add_reaction("\U0001F4B8")
+
+    async def remove_all(self, args, client, client_message):
+        guild = str(client_message.guild.id)
+        list_of_people_to_remove = []
+        for person in self.bank[guild]:
+            list_of_people_to_remove.append(person)
+        for person in list_of_people_to_remove: # this is to fix deleting stuff from a dict while being iterated on
+            print("removing " + str(person))
+            await self.remove_id([0,person], client, client_message) # the [0,] is a lazy fix because the function reads args[1]
+            await client_message.add_reaction("\U0001F4B8")
+
+    # can be made slightly more efficient by waiting to write to the file until all changes have been made, later...
     async def remove_id(self, args, client, client_message):
         guild = str(client_message.guild.id)
         userid = str(self.get_user_id_from_message(args[1]))
